@@ -1,1 +1,1 @@
-Interactive web application using R shiny
+Interactive web application using R Shiny
