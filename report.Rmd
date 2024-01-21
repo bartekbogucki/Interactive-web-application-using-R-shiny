@@ -1,0 +1,116 @@
+---
+title: "Report"
+author: "Bartosz Bogucki"
+output: html_document
+
+---
+
+```{r, echo=F, results="asis", warning=FALSE, message=FALSE}
+
+library(DT)
+
+d=ret()
+
+try({
+  DT::datatable(  
+    d, 
+    rownames = FALSE,
+    filter="top",
+    options = list(
+      scrollX = TRUE,
+      pageLength = 16,
+      lengthMenu = seq(from=10,by=10,to=100) 
+    )
+  )
+},
+silent=T)
+
+if(ncol(d)==3){
+  if(colnames(d)[1]=="timestamp" & colnames(d)[2]=="variable" & colnames(d)[3]=="value"){
+    d <- aggregate(value ~ timestamp+variable, data=d, FUN=sum, na.rm=T)
+    d$timestamp <- tryCatch(as.Date(d$timestamp), error = function(e) ISOweek2date(paste(substr(d$timestamp, 1, 4), "-", substr(d$timestamp, 5, 7), "-1", sep="")))
+    img <- ggplot(d, aes(x=timestamp,y=value,col=variable)) + geom_line()
+  } else {
+    img <- ggplot(data.frame())
+  }
+} else {
+  img <- ggplot(data.frame())
+}
+print(img)
+
+```
+
+```{r, echo=F, results='asis'}
+
+library(googleVis)
+op <- options(gvis.plot.tag='chart')
+
+try({
+  img <- gvisGeoChart(
+    map(),
+    locationvar="Region",
+    colorvar="Liczba",
+    options=list(region="PL",
+                 displayMode="regions",
+                 resolution="provinces"
+    ))
+  plot(img)
+  
+  img2 <- gvisGeoChart(
+    map_wzgledna(),
+    locationvar="Region",
+    colorvar="Liczba",
+    options=list(region="PL",
+                 displayMode="regions",
+                 resolution="provinces"
+    ))
+  plot(img2)
+},
+silent=T)
+
+try({
+  img3 <- gvisGeoChart(
+    mapEU(),
+    locationvar="GEO",
+    colorvar="Value",
+    options=list(region=150
+    ))
+  
+  plot(img3)
+  
+  img4 <- gvisGeoChart(
+    mapEU_wzgledna(),
+    locationvar="GEO",
+    colorvar="Value",
+    options=list(region=150
+    ))
+  
+  plot(img4)
+},
+silent=T)
+
+```
+
+```{r, echo = FALSE, results='asis'}
+
+library(ggplot2)
+
+try({
+  img <- ggplot(szeregczasowy(), aes(x=Data,y=Liczba)) + geom_line()
+  print(img)
+  
+  img2 <- ggplot(szeregczasowy_wzgledny(), aes(x=Data,y=Liczba)) + geom_line()
+  print(img2)
+},
+silent=T)
+
+try({
+  img3 <- ggplot(szeregczasowyEU(), aes(x=Data,y=Value)) + geom_line()
+  print(img3)
+  
+  img4 <- ggplot(szeregczasowyEU_wzgledny(), aes(x=Data,y=Value)) + geom_line()
+  print(img4)
+},
+silent=T)
+
+```
